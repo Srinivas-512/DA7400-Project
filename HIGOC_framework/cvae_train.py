@@ -12,10 +12,10 @@ class CVAETrainer(nn.Module):
     def __init__(self, data, b, train_test_split_ratio, state_dim, base_model_path):
         super(CVAETrainer, self).__init__()
         with h5py.File(data, 'r') as hdf:
-            self.states = torch.tensor(hdf['observations'])
-            self.actions = torch.tensor(hdf['actions'])
-            self.rewards = torch.tensor(hdf['rewards'])
-            self.next_states = torch.tensor(hdf['next_observations'])
+            self.states = torch.tensor(hdf['observations'][:])
+            # self.actions = torch.tensor(hdf['actions'][:])
+            # self.rewards = torch.tensor(hdf['rewards'][:])
+            # self.next_states = torch.tensor(hdf['next_observations'][:])
         
         self.b = b
         self.train_test_split_ratio = train_test_split_ratio
@@ -56,12 +56,16 @@ class CVAETrainer(nn.Module):
                     self.dataloaders[phase], desc="NN Epoch {} {}".format(epoch, phase).ljust(20)
                 )
                 for i, batch in enumerate(bar):
-                    x = batch.to(device)
+                    # import pdb; pdb.set_trace()
+                    x = batch[0].to(device)
 
                     optimizer.zero_grad()
 
                     with torch.set_grad_enabled(phase == "train"):
-                        preds = baseline_model(x)
+                        # CHECK
+                        y_mean, y_std = baseline_model(x)
+                        # preds = torch.normal(y_mean, y_std)
+                        preds = y_mean
                         loss = criterion(preds, x) / x.size(0)
                         if phase == "train":
                             loss.backward()
@@ -71,7 +75,7 @@ class CVAETrainer(nn.Module):
                     num_preds += 1
                     if i % 10 == 0:
                         bar.set_postfix(
-                            loss="{:.2f}".format(running_loss / num_preds),
+                            loss="{:.5f}".format(running_loss / num_preds),
                             early_stop_count=early_stop_count,
                         )
 
@@ -111,7 +115,7 @@ class CVAETrainer(nn.Module):
                     desc="CVAE Epoch {} {}".format(epoch, phase).ljust(20),
                 )
                 for i, batch in enumerate(bar):
-                    x = batch.to(device)
+                    x = batch[0].to(device)
 
                     if phase == "train":
                         cvae_net.train()
@@ -121,7 +125,7 @@ class CVAETrainer(nn.Module):
                         optimizer.step()
                     else:
                         cvae_net.eval()
-                        y_mean, y_std, z_mean_rec, z_std_rec, z_mean_prior, z_std_prior = cvae_net(x)
+                        y_mean, y_std, z_mean_rec, z_std_rec, z_mean_prior, z_std_prior = cvae_net(x, x)
                         loss = cvae_net.compute_loss(x, y_mean, y_std, z_mean_rec, z_std_rec, z_mean_prior, z_std_prior)
 
                     # statistics
@@ -150,11 +154,12 @@ class CVAETrainer(nn.Module):
 
 if __name__ == '__main__':
     file = "D:\IIT Madras\Sem 7\Advances in RL\DA7400-Project\HIGOC_framework\Ant_maze_u-maze_noisy_multistart_False_multigoal_False_sparse.hdf5"
-    trainer_obj = CVAETrainer(file, 32, 0.8, 111, "HIGOC_framework/weights")
-    baseline_model = BaselineNet(111, 128, 128)
+    base = "D:\IIT Madras\Sem 7\Advances in RL\DA7400-Project\HIGOC_framework\weights"
+    trainer_obj = CVAETrainer(file, 32, 0.8, 111, base)
+    baseline_model = BaselineNet(29, 128, 128)
     optimizer = torch.optim.Adam(baseline_model.parameters(), 1e-3)
     criterion = nn.MSELoss()
-    baseline_net = trainer_obj.train_baseline(100, optimizer, criterion, baseline_model)
+    baseline_net = trainer_obj.train_baseline(1, optimizer, criterion, baseline_model)
 
-    cvae_model = CVAE(111, 200, 500, 500, baseline_net)
+    cvae_model = CVAE(29, 200, 500, 500, baseline_net)
     cvae_model = trainer_obj.train(100, optimizer, baseline_net, 10, cvae_model)
