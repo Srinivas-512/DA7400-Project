@@ -13,10 +13,15 @@ To run the model, there are two steps:
 
 To complete step 1), the following steps must be taken:
     - change working directory to the CVAE folder (cd CVAE)
+    
     - open train.py and modify the object creation to include:
+    
         i) Latent and Hidden dimensions of choice
+        
         ii) Number of epochs to train
+        
         iii) The environment on which to train the CVAE
+        
     - run train.py (python train.py)
 
 This will automatically save the weights as well with naming including the env, latent dim, hidden dim
