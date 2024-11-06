@@ -1,3 +1,9 @@
+This is an implementation of the HiGOC framework from "Hierarchical Planning Through Goal-Conditioned Offline Reinforcement Learning" by Li .et. al
+
+Instead of the CQL-SAC agent in the paper, we run two kinds of agents - IQL and TD3+BC
+
+Further, we also propose two kinds of planners, the original from the paper, and our modified distance modified faster planner
+
 To run the model, there are two steps:
 
 1) Train the CVAE 
