@@ -28,13 +28,22 @@ This will automatically save the weights as well with naming including the env, 
 
 
 For step 2), the following are the steps to be taken:
+
     - change working directory to higoc folder (cd higoc) 
+    
     - open config.py and change any hyperparams as required for either of the two agents
-    - run => python higoc.py --agent_type 'iql' --exp_name 'exp0' --env 'antmaze-umaze-v2'  --latent_dim 8 --hidden_dim 64 --subgoal_patience 50
+    
+    - run =>  python higoc.py --agent_type 'iql' --exp_name 'exp0' --env 'antmaze-umaze-v2'  --latent_dim 8 --hidden_dim 64 --subgoal_patience 50 --eval_method distance_higoc
+    
         i) change the CVAE parameters appropriately to values on which the CVAE has been trained before,
            this will automatically trigger the collection of those weights
+           
         ii) change the name of the experiment for different runs else the weights saved will be
             overwritten
+            
         iii) agent type has two choices (iql or td3_bc)
+
+        iv) eval_method refers to the planner type, there are two choices (higoc, distance_higoc) to use the original or modified 
+            planner respectively
 
 This will automatically save weights as well in the folder weights/{agent_type}-{exp_name} in the higoc itself
